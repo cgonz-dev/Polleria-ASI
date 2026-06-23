@@ -16,7 +16,7 @@ El primer módulo real será **Venta en Pluma**. La base del proyecto no queda l
 
 El primer flujo funcional será **captura rápida de venta en pluma con cálculo automático y guardado en Supabase**.
 
-El MVP de Venta en Pluma ahora incluye captura rápida, cálculo automático, guardado en Supabase, ticket imprimible de 80mm, bandeja de tickets pendientes por imprimir y uso de branding Pollería ASI en la interfaz.
+El MVP de Venta en Pluma ahora incluye captura rápida, cálculo automático, guardado en Supabase, ticket imprimible de 80mm, bandeja de tickets pendientes por imprimir, corte del día y uso de branding Pollería ASI en la interfaz.
 
 El ticket imprimible está pensado para el cliente final: muestra información clara de compra y evita datos internos como cajero, descuentos, tipo de cliente o desglose técnico de precios.
 
@@ -39,6 +39,7 @@ El sistema busca ordenar capturas de venta, tickets, clientes frecuentes y corte
 - Login para separar operación por usuario y evitar selección manual de cajero.
 - Permiso de impresión para permitir captura desde celulares o tablets sin imprimir desde todos los dispositivos.
 - Bandeja de tickets pendientes para centralizar la impresión en la PC de caja.
+- Corte del día para revisar total vendido, efectivo esperado, pollos, kg, preparación y actividad por usuario.
 - Enfoque económico, priorizando herramientas accesibles y una implementación mantenible.
 - Enfoque responsive para computadora, tablet y celular.
 
@@ -64,6 +65,8 @@ Cuando se imprime y confirma, se registra:
 printed_at
 printed_by_user_id
 ```
+
+El corte del día usa `daily_cash_closures` para guardar una fotografía de los totales del día. Solo considera ventas `COMPLETADA`, usa horario `America/Mexico_City` y permite comparar efectivo esperado contra efectivo contado.
 
 Fórmula inicial:
 

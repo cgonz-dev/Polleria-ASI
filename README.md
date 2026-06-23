@@ -118,6 +118,14 @@ docs/database/006-print-tracking-pluma-sales.sql
 
 Esta migración agrega `printed_at`, `printed_by_user_id`, el RPC seguro `mark_pluma_sale_printed` y habilita Supabase Realtime para `pluma_sales`.
 
+Para activar el corte del día, ejecuta:
+
+```txt
+docs/database/007-daily-cash-closures.sql
+```
+
+Esta migración crea `daily_cash_closures` y el RPC seguro `close_daily_cash_closure`.
+
 ## Login y permisos
 
 El sistema usa `/login` con email y contraseña de Supabase Auth.
@@ -153,6 +161,46 @@ La pantalla muestra:
 Usuarios sin permiso pueden ver tickets, pero no imprimir ni marcar impreso. Usuarios con `can_print_tickets = true` pueden imprimir, marcar impreso y reimprimir.
 
 La reimpresión no cambia `printed_at`.
+
+## Corte del Día
+
+La ruta `/caja/corte-dia` muestra el resumen diario de ventas de pollo en pluma.
+
+Incluye:
+
+- Total vendido.
+- Número de ventas.
+- Pollos vendidos.
+- Kg vendidos.
+- Preparación.
+- Subtotal pollo.
+- Total efectivo esperado.
+- Tickets impresos y pendientes.
+- Desglose por usuario.
+- Desglose público general vs clientes premium.
+
+El corte usa horario de México:
+
+```txt
+America/Mexico_City
+```
+
+Solo considera ventas:
+
+```txt
+status = COMPLETADA
+```
+
+Usuarios autenticados pueden consultar el corte. Solo usuarios `ADMIN` pueden cerrar o actualizar el corte del día.
+
+Al cerrar corte, la app pide:
+
+```txt
+Efectivo contado
+Notas opcionales
+```
+
+La base calcula los totales reales desde `pluma_sales`; el frontend no envía totales calculados. Si entran ventas después de cerrar, la pantalla avisa que puede haber cambios posteriores al cierre.
 
 ## Venta rápida en Pluma
 

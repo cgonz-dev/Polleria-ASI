@@ -9,3 +9,12 @@ export function formatDateTimeMx(value: string | Date) {
     year: "numeric",
   }).format(new Date(value));
 }
+
+export function formatDateMx(value: string | Date) {
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "America/Mexico_City",
+    year: "numeric",
+  }).format(new Date(value));
+}

@@ -8,3 +8,4 @@ Esta carpeta guarda las especificaciones funcionales del sistema Pollería ASI.
 - `SPEC-004-2-ajuste-encabezado-preparacion-ticket.md`
 - `SPEC-005-login-usuarios-permisos.md`
 - `SPEC-006-tickets-pendientes-impresion.md`
+- `SPEC-007-corte-dia.md`

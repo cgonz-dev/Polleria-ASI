@@ -70,6 +70,26 @@ export type PlumaSaleCancellation = {
   created_at: string;
 };
 
+export type DailyCashClosure = {
+  id: string;
+  business_date: string;
+  expected_cash_total: number;
+  counted_cash_total: number;
+  cash_difference: number;
+  sales_count: number;
+  total_chickens: number;
+  total_weight_kg: number;
+  chicken_subtotal: number;
+  preparation_total: number;
+  grand_total: number;
+  pending_print_count: number;
+  printed_count: number;
+  closed_by_user_id: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type InsertBusinessSettings = {
   id?: string;
   business_name: string;
@@ -134,6 +154,26 @@ export type InsertPlumaSaleCancellation = {
   created_at?: string;
 };
 
+export type InsertDailyCashClosure = {
+  id?: string;
+  business_date: string;
+  expected_cash_total: number;
+  counted_cash_total: number;
+  cash_difference: number;
+  sales_count: number;
+  total_chickens: number;
+  total_weight_kg: number;
+  chicken_subtotal: number;
+  preparation_total: number;
+  grand_total: number;
+  pending_print_count: number;
+  printed_count: number;
+  closed_by_user_id: string;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 type TableDefinition<Row, Insert, Update = Partial<Insert>> = {
   Row: Row;
   Insert: Insert;
@@ -161,6 +201,11 @@ export type Database = {
         InsertPlumaSaleCancellation,
         Partial<InsertPlumaSaleCancellation>
       >;
+      daily_cash_closures: TableDefinition<
+        DailyCashClosure,
+        InsertDailyCashClosure,
+        Partial<InsertDailyCashClosure>
+      >;
     };
     Views: Record<string, never>;
     Functions: {
@@ -169,6 +214,14 @@ export type Database = {
           p_sale_id: string;
         };
         Returns: PlumaSale;
+      };
+      close_daily_cash_closure: {
+        Args: {
+          p_business_date: string;
+          p_counted_cash_total: number;
+          p_notes?: string | null;
+        };
+        Returns: DailyCashClosure;
       };
     };
     Enums: Record<string, never>;
