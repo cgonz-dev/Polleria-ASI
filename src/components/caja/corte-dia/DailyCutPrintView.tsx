@@ -47,12 +47,16 @@ export function DailyCutPrintView({
         <p>Pollos vendidos: {summary.totalChickens}</p>
         <p>Kg vendidos: {formatKg(summary.totalWeightKg)}</p>
         <p>Preparación: {formatMoney(summary.preparationTotal)}</p>
+        <p>Servicios extra: {formatMoney(summary.extraServicesTotal)}</p>
       </section>
 
       <section className="corte-print-section">
         <h2>Financiero</h2>
         <p>Subtotal pollo: {formatMoney(summary.chickenSubtotal)}</p>
         <p>Preparación: {formatMoney(summary.preparationTotal)}</p>
+        <p>Despielada: {formatMoney(summary.skinningTotal)}</p>
+        <p>Pechuga fileteada: {formatMoney(summary.breastFilletTotal)}</p>
+        <p>Servicios extra: {formatMoney(summary.extraServicesTotal)}</p>
         <p>Total efectivo esperado: {formatMoney(summary.grandTotal)}</p>
       </section>
 
@@ -77,7 +81,7 @@ export function DailyCutPrintView({
       </section>
 
       <section className="corte-print-section">
-        <h2>Público general vs premium</h2>
+        <h2>Público general vs preferenciales</h2>
         {customerTypeBreakdown.map((row) => (
           <p key={row.customerType}>
             {row.label}: {row.salesCount} ventas | {row.totalChickens} pollos |{" "}
@@ -103,6 +107,14 @@ export function DailyCutPrintView({
             <p>Efectivo contado: {formatMoney(closure.counted_cash_total)}</p>
             <p>
               {differenceLabel}: {formatMoney(closure.cash_difference)}
+            </p>
+            <p>Despielada: {formatMoney(closure.skinning_total ?? 0)}</p>
+            <p>
+              Pechuga fileteada:{" "}
+              {formatMoney(closure.breast_fillet_total ?? 0)}
+            </p>
+            <p>
+              Servicios extra: {formatMoney(closure.extra_services_total ?? 0)}
             </p>
             {closure.notes ? <p>Notas: {closure.notes}</p> : null}
             {hasMismatch ? (

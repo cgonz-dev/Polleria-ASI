@@ -22,6 +22,10 @@ export function PendingTicketCard({
   sale,
 }: PendingTicketCardProps) {
   const chickenLabel = sale.chicken_quantity === 1 ? "pollo" : "pollos";
+  const weightLabel =
+    sale.weight_type === "PELADO" || sale.preparation_applies === false
+      ? "Peso ya pelado"
+      : "Peso en pluma";
 
   return (
     <article className="rounded-md border border-[#E8DFC6] bg-white p-4 shadow-sm">
@@ -43,7 +47,7 @@ export function PendingTicketCard({
           </p>
           <p className="mt-1 text-sm text-[#6B7280]">
             {sale.chicken_quantity} {chickenLabel} ·{" "}
-            {formatKg(sale.total_weight_kg)}
+            {weightLabel}: {formatKg(sale.total_weight_kg)}
           </p>
         </div>
 

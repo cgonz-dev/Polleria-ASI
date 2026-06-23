@@ -8,7 +8,7 @@ type CustomerTypeSelectorProps = {
 
 const options: { label: string; value: CustomerType }[] = [
   { label: "Público general", value: "PUBLICO_GENERAL" },
-  { label: "Cliente premium", value: "CLIENTE_PREMIUM" },
+  { label: "Cliente preferencial", value: "CLIENTE_PREFERENCIAL" },
 ];
 
 export function CustomerTypeSelector({

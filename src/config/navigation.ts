@@ -1,6 +1,5 @@
 import {
   Banknote,
-  Crown,
   LayoutDashboard,
   ReceiptText,
   Settings,
@@ -44,9 +43,9 @@ export const mainNavigation = [
   {
     children: [
       {
-        href: "/clientes/premium",
-        icon: Crown,
-        title: "Clientes Premium",
+        href: "/clientes/preferenciales",
+        icon: Users,
+        title: "Clientes Preferenciales",
       },
     ],
     icon: Users,

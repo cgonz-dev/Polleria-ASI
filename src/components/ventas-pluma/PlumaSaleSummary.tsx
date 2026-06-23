@@ -1,14 +1,17 @@
-import type { PlumaSaleCalculationResult } from "@/lib/modules/ventas-pluma/types";
+import type {
+  CustomerType,
+  PlumaSaleCalculationResult,
+} from "@/lib/modules/ventas-pluma/types";
 import { formatKg, formatMoney } from "@/components/ventas-pluma/formatters";
 
 type PlumaSaleSummaryProps = {
   attendantName: string;
-  basePricePerKg: number;
   calculation: PlumaSaleCalculationResult;
   chickenQuantity: number;
+  customerType: CustomerType;
   customerName: string;
-  discountPerKg: number;
   preparationUnitPrice: number;
+  publicPricePerKg: number;
   totalWeightKg: number;
 };
 
@@ -31,21 +34,25 @@ function SummaryRow({
 
 export function PlumaSaleSummary({
   attendantName,
-  basePricePerKg,
   calculation,
   chickenQuantity,
+  customerType,
   customerName,
-  discountPerKg,
   preparationUnitPrice,
+  publicPricePerKg,
   totalWeightKg,
 }: PlumaSaleSummaryProps) {
+  const isPreferredCustomer = customerType === "CLIENTE_PREFERENCIAL";
+
   return (
     <aside className="no-print rounded-lg border border-[#E8DFC6] bg-white shadow-sm lg:sticky lg:top-24">
       <div className="rounded-t-md bg-[#0B7A3B] px-5 py-4 text-white">
         <p className="text-sm font-medium uppercase tracking-wide">
           Resumen de venta
         </p>
-        <h2 className="mt-1 text-xl font-semibold">Venta en Pluma</h2>
+        <h2 className="mt-1 text-xl font-semibold">
+          {isPreferredCustomer ? "Pollo preparado" : "Venta en Pluma"}
+        </h2>
       </div>
 
       <div className="grid gap-1 px-5 py-4">
@@ -55,26 +62,60 @@ export function PlumaSaleSummary({
           value={attendantName || "Usuario no cargado"}
         />
         <SummaryRow label="Cantidad de pollos" value={chickenQuantity || 0} />
-        <SummaryRow label="Peso total" value={formatKg(totalWeightKg)} />
-        <SummaryRow label="Precio base por kg" value={`${formatMoney(basePricePerKg)}/kg`} />
         <SummaryRow
-          label="Descuento por kg"
-          value={`-${formatMoney(discountPerKg)}/kg`}
+          label={isPreferredCustomer ? "Peso ya pelado" : "Peso en pluma"}
+          value={formatKg(totalWeightKg)}
         />
         <SummaryRow
-          label="Precio aplicado por kg"
+          label={
+            isPreferredCustomer
+              ? "Precio preferencial por kg"
+              : "Precio público por kg"
+          }
           value={`${formatMoney(calculation.appliedPricePerKg)}/kg`}
         />
+        {isPreferredCustomer ? (
+          <SummaryRow
+            label="Precio público de referencia"
+            value={`${formatMoney(publicPricePerKg)}/kg`}
+          />
+        ) : null}
         <SummaryRow
-          label="Subtotal pollo"
+          label={isPreferredCustomer ? "Pollo preparado" : "Pollo en pluma"}
           value={formatMoney(calculation.chickenSubtotal)}
         />
-        <SummaryRow
-          label="Preparación"
-          value={`${formatMoney(calculation.preparationTotal)} (${formatMoney(
-            preparationUnitPrice
-          )}/pollo)`}
-        />
+        {calculation.preparationApplies ? (
+          <SummaryRow
+            label="Preparación"
+            value={`${formatMoney(calculation.preparationTotal)} (${formatMoney(
+              preparationUnitPrice
+            )}/pollo)`}
+          />
+        ) : (
+          <SummaryRow label="Preparación" value="No aplica" />
+        )}
+        {calculation.skinningRequested ? (
+          <SummaryRow
+            label="Despielada"
+            value={`${formatMoney(calculation.skinningTotal)} (${formatMoney(
+              calculation.skinningUnitPrice
+            )}/pollo)`}
+          />
+        ) : null}
+        {calculation.breastFilletRequested ? (
+          <SummaryRow
+            label="Pechuga fileteada"
+            value={`${formatMoney(
+              calculation.breastFilletTotal
+            )} (${formatMoney(calculation.breastFilletUnitPrice)}/pollo)`}
+          />
+        ) : null}
+        {isPreferredCustomer ? (
+          <SummaryRow
+            label="Servicios extra"
+            value={formatMoney(calculation.extraServicesTotal)}
+          />
+        ) : null}
       </div>
 
       <div className="border-t border-[#E8DFC6] bg-[#FAF7EF] px-5 py-5">

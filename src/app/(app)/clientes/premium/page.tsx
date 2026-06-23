@@ -1,11 +1,5 @@
-import { ModulePlaceholder } from "@/components/app/module-placeholder";
+import { redirect } from "next/navigation";
 
-export default function ClientesPremiumPage() {
-  return (
-    <ModulePlaceholder
-      description="Base para administrar clientes frecuentes, beneficios y condiciones comerciales."
-      module="Clientes"
-      title="Clientes Premium"
-    />
-  );
+export default function ClientesLegacyRedirectPage() {
+  redirect("/clientes/preferenciales");
 }

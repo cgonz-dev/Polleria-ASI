@@ -8,16 +8,17 @@ import { PendingTicketsAccessCard } from "@/components/caja/tickets-pendientes/P
 import { CustomerTypeSelector } from "@/components/ventas-pluma/CustomerTypeSelector";
 import { formatMoney } from "@/components/ventas-pluma/formatters";
 import { PlumaSaleSummary } from "@/components/ventas-pluma/PlumaSaleSummary";
-import { PremiumCustomerSelect } from "@/components/ventas-pluma/PremiumCustomerSelect";
+import { PreferredCustomerSelect } from "@/components/ventas-pluma/PreferredCustomerSelect";
 import { PlumaSaleTicketModal } from "@/components/tickets/PlumaSaleTicketModal";
 import { Button } from "@/components/ui/button";
+import { canPrintTickets as canUserPrintTickets } from "@/lib/auth/permissions";
 import {
   calculatePlumaSale,
   roundKg,
 } from "@/lib/modules/ventas-pluma/calculations";
 import {
   createPlumaSale,
-  getActivePremiumCustomers,
+  getActivePreferredCustomers,
   getBusinessSettings,
 } from "@/lib/modules/ventas-pluma/service";
 import { markPlumaSalePrinted } from "@/lib/modules/tickets-pendientes/service";
@@ -30,11 +31,10 @@ import type {
   PlumaSale,
   PremiumCustomer,
 } from "@/lib/supabase/types";
-import { canPrintTickets as canUserPrintTickets } from "@/lib/auth/permissions";
 
 type LoadErrors = {
   businessSettings?: string;
-  premiumCustomers?: string;
+  preferredCustomers?: string;
 };
 
 type TicketState = {
@@ -62,11 +62,11 @@ function hasMoreThanThreeDecimals(value: string) {
 
 function buildInitialData(
   businessSettings: BusinessSettings,
-  premiumCustomers: PremiumCustomer[]
+  preferredCustomers: PremiumCustomer[]
 ): PlumaSaleInitialData {
   return {
     businessSettings,
-    premiumCustomers,
+    preferredCustomers,
   };
 }
 
@@ -81,7 +81,10 @@ export function PlumaSaleForm() {
   const [isSaving, setIsSaving] = React.useState(false);
   const [customerType, setCustomerType] =
     React.useState<CustomerType>("PUBLICO_GENERAL");
-  const [premiumCustomerId, setPremiumCustomerId] = React.useState("");
+  const [preferredCustomerId, setPreferredCustomerId] = React.useState("");
+  const [skinningRequested, setSkinningRequested] = React.useState(false);
+  const [breastFilletRequested, setBreastFilletRequested] =
+    React.useState(false);
   const [chickenQuantityInput, setChickenQuantityInput] = React.useState("");
   const [totalWeightInput, setTotalWeightInput] = React.useState("");
   const [formErrors, setFormErrors] = React.useState<string[]>([]);
@@ -98,7 +101,7 @@ export function PlumaSaleForm() {
       setIsLoading(true);
       const [settingsResult, customersResult] = await Promise.allSettled([
         getBusinessSettings(),
-        getActivePremiumCustomers(),
+        getActivePreferredCustomers(),
       ]);
 
       if (!isMounted) {
@@ -117,8 +120,8 @@ export function PlumaSaleForm() {
       }
 
       if (customersResult.status === "rejected") {
-        nextErrors.premiumCustomers =
-          "No se pudieron cargar los clientes premium activos.";
+        nextErrors.preferredCustomers =
+          "No se pudieron cargar los clientes preferenciales activos.";
       }
 
       setLoadErrors(nextErrors);
@@ -127,7 +130,7 @@ export function PlumaSaleForm() {
       setTimeout(() => quantityInputRef.current?.focus(), 0);
     }
 
-    loadData();
+    void loadData();
 
     return () => {
       isMounted = false;
@@ -135,30 +138,39 @@ export function PlumaSaleForm() {
   }, []);
 
   const businessSettings = initialData?.businessSettings ?? null;
-  const premiumCustomers = initialData?.premiumCustomers ?? [];
-  const selectedPremiumCustomer = premiumCustomers.find(
-    (customer) => customer.id === premiumCustomerId
+  const preferredCustomers = initialData?.preferredCustomers ?? [];
+  const selectedPreferredCustomer = preferredCustomers.find(
+    (customer) => customer.id === preferredCustomerId
   );
+  const isPreferredCustomer = customerType === "CLIENTE_PREFERENCIAL";
   const chickenQuantity = Number(chickenQuantityInput);
   const parsedWeight = parseDecimalInput(totalWeightInput);
-  const basePricePerKg = businessSettings?.current_price_per_kg ?? 0;
+  const publicPricePerKg = businessSettings?.current_price_per_kg ?? 0;
   const preparationUnitPrice =
     businessSettings?.preparation_price_per_chicken ?? 0;
-  const discountPerKg =
-    customerType === "CLIENTE_PREMIUM"
-      ? selectedPremiumCustomer?.discount_per_kg ?? 0
-      : 0;
+  const preferredPricePerKg =
+    selectedPreferredCustomer?.preferred_price_per_kg ??
+    businessSettings?.preferred_customer_default_price_per_kg ??
+    publicPricePerKg;
   const calculation = calculatePlumaSale({
-    basePricePerKg,
+    breastFilletPricePerChicken:
+      selectedPreferredCustomer?.breast_fillet_price_per_chicken ?? 0,
+    breastFilletRequested,
     chickenQuantity: Number.isInteger(chickenQuantity) ? chickenQuantity : 0,
-    discountPerKg,
-    preparationUnitPrice,
+    customerMode: isPreferredCustomer
+      ? "PREFERRED_CUSTOMER"
+      : "PUBLIC_GENERAL",
+    preferredPricePerKg,
+    preparationPricePerChicken: preparationUnitPrice,
+    publicPricePerKg,
+    skinningPricePerChicken:
+      selectedPreferredCustomer?.skinning_price_per_chicken ?? 0,
+    skinningRequested,
     totalWeightKg: Number.isFinite(parsedWeight) ? parsedWeight : 0,
   });
-  const customerName =
-    customerType === "CLIENTE_PREMIUM"
-      ? selectedPremiumCustomer?.name ?? "Cliente premium"
-      : "Público general";
+  const customerName = isPreferredCustomer
+    ? selectedPreferredCustomer?.name ?? "Cliente preferencial"
+    : "Público general";
   const businessPhone =
     businessSettings?.phone?.trim() &&
     businessSettings.phone.trim() !== "000-000-0000"
@@ -170,7 +182,9 @@ export function PlumaSaleForm() {
     setChickenQuantityInput("");
     setTotalWeightInput("");
     setCustomerType("PUBLICO_GENERAL");
-    setPremiumCustomerId("");
+    setPreferredCustomerId("");
+    setSkinningRequested(false);
+    setBreastFilletRequested(false);
     setFormErrors([]);
     setTicketState(null);
     setTimeout(() => quantityInputRef.current?.focus(), 0);
@@ -201,19 +215,23 @@ export function PlumaSaleForm() {
     if (!weightText || !Number.isFinite(weightValue) || weightValue <= 0) {
       errors.push("El peso total debe ser mayor a 0.");
     } else if (hasMoreThanThreeDecimals(weightText)) {
-      errors.push("El peso total debe ser mayor a 0.");
+      errors.push("El peso total debe tener máximo 3 decimales.");
     }
 
-    if (customerType === "CLIENTE_PREMIUM" && !selectedPremiumCustomer) {
-      errors.push("Selecciona un cliente premium.");
+    if (isPreferredCustomer && !selectedPreferredCustomer) {
+      errors.push("Selecciona un cliente preferencial.");
     }
 
-    if (!businessSettings || basePricePerKg <= 0) {
-      errors.push("No se pudo cargar el precio actual del pollo.");
+    if (!businessSettings || publicPricePerKg <= 0) {
+      errors.push("No se pudo cargar el precio público del pollo.");
     }
 
     if (calculation.appliedPricePerKg <= 0) {
-      errors.push("El precio aplicado debe ser mayor a 0.");
+      errors.push("El precio por kg debe ser mayor a 0.");
+    }
+
+    if (isPreferredCustomer && calculation.preparationTotal !== 0) {
+      errors.push("La preparación no aplica para cliente preferencial.");
     }
 
     return errors;
@@ -237,21 +255,30 @@ export function PlumaSaleForm() {
       const totalWeightKg = roundKg(parseDecimalInput(totalWeightInput));
       const createdSale = await createPlumaSale({
         appliedPricePerKg: calculation.appliedPricePerKg,
-        basePricePerKg,
+        basePricePerKg: publicPricePerKg,
+        breastFilletRequested: calculation.breastFilletRequested,
+        breastFilletTotal: calculation.breastFilletTotal,
+        breastFilletUnitPrice: calculation.breastFilletUnitPrice,
         cashierUserId: currentUser.id,
         chickenQuantity: quantityValue,
         chickenSubtotal: calculation.chickenSubtotal,
-        customerId:
-          customerType === "CLIENTE_PREMIUM" ? selectedPremiumCustomer!.id : null,
-        customerNameSnapshot:
-          customerType === "CLIENTE_PREMIUM"
-            ? selectedPremiumCustomer!.name
-            : "Público general",
-        discountPerKg,
+        customerId: isPreferredCustomer ? selectedPreferredCustomer!.id : null,
+        customerNameSnapshot: isPreferredCustomer
+          ? selectedPreferredCustomer!.name
+          : "Público general",
+        discountPerKg: 0,
+        extraServicesTotal: calculation.extraServicesTotal,
         grandTotal: calculation.grandTotal,
+        preparationApplies: calculation.preparationApplies,
         preparationTotal: calculation.preparationTotal,
-        preparationUnitPrice,
+        preparationUnitPrice: calculation.preparationApplies
+          ? preparationUnitPrice
+          : 0,
+        skinningRequested: calculation.skinningRequested,
+        skinningTotal: calculation.skinningTotal,
+        skinningUnitPrice: calculation.skinningUnitPrice,
         totalWeightKg,
+        weightType: calculation.weightType,
       });
 
       setSuccessMessage(
@@ -314,8 +341,8 @@ export function PlumaSaleForm() {
               Venta rápida en Pluma
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B7280]">
-              Captura rápida para caja con cálculo automático y guardado en
-              Supabase. Al terminar se abre el ticket imprimible.
+              Captura ventas de público general en pluma o clientes
+              preferenciales con peso ya pelado y servicios extra.
             </p>
           </div>
           <div className="grid gap-3 sm:min-w-[22rem]">
@@ -324,10 +351,11 @@ export function PlumaSaleForm() {
                 {businessSettings?.business_name ?? "Pollería ASI"}
               </p>
               <p className="text-[#6B7280]">
-                Precio kg: {formatMoney(basePricePerKg)}
+                Precio público kg: {formatMoney(publicPricePerKg)}
               </p>
               <p className="text-[#6B7280]">
-                Preparación: {formatMoney(preparationUnitPrice)} por pollo
+                Preparación público general: {formatMoney(preparationUnitPrice)}
+                {" por pollo"}
               </p>
             </div>
             <PendingTicketsAccessCard canPrintTickets={userCanPrintTickets} />
@@ -407,17 +435,23 @@ export function PlumaSaleForm() {
               onChange={(type) => {
                 setCustomerType(type);
                 if (type === "PUBLICO_GENERAL") {
-                  setPremiumCustomerId("");
+                  setPreferredCustomerId("");
+                  setSkinningRequested(false);
+                  setBreastFilletRequested(false);
                 }
               }}
               value={customerType}
             />
 
-            {customerType === "CLIENTE_PREMIUM" ? (
-              <PremiumCustomerSelect
-                customers={premiumCustomers}
-                onChange={setPremiumCustomerId}
-                value={premiumCustomerId}
+            {isPreferredCustomer ? (
+              <PreferredCustomerSelect
+                customers={preferredCustomers}
+                onChange={(customerId) => {
+                  setPreferredCustomerId(customerId);
+                  setSkinningRequested(false);
+                  setBreastFilletRequested(false);
+                }}
+                value={preferredCustomerId}
               />
             ) : null}
 
@@ -442,7 +476,9 @@ export function PlumaSaleForm() {
 
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-[#1F2933]">
-                  Peso total kg
+                  {isPreferredCustomer
+                    ? "Peso total ya pelado"
+                    : "Peso total en pluma"}
                 </span>
                 <input
                   className="h-14 rounded-md border border-[#E8DFC6] bg-white px-4 text-xl font-semibold shadow-sm outline-none transition focus:border-[#0B7A3B] focus:ring-4 focus:ring-[#0B7A3B]/15"
@@ -463,29 +499,77 @@ export function PlumaSaleForm() {
               </label>
             </div>
 
+            {isPreferredCustomer ? (
+              <div className="grid gap-3 rounded-md border border-[#E8DFC6] bg-[#FAF7EF] p-4">
+                <div>
+                  <p className="text-xs font-bold uppercase text-[#0B7A3B]">
+                    Servicios extra
+                  </p>
+                  <p className="mt-1 text-sm text-[#6B7280]">
+                    Solo se cobran si se marcan. La preparación no aplica.
+                  </p>
+                </div>
+                <label className="flex min-h-11 items-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold">
+                  <input
+                    checked={skinningRequested}
+                    className="h-4 w-4 accent-[#0B7A3B]"
+                    disabled={!selectedPreferredCustomer}
+                    onChange={(event) =>
+                      setSkinningRequested(event.target.checked)
+                    }
+                    type="checkbox"
+                  />
+                  Despielada (
+                  {formatMoney(
+                    selectedPreferredCustomer?.skinning_price_per_chicken ?? 0
+                  )}
+                  /pollo)
+                </label>
+                <label className="flex min-h-11 items-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold">
+                  <input
+                    checked={breastFilletRequested}
+                    className="h-4 w-4 accent-[#0B7A3B]"
+                    disabled={!selectedPreferredCustomer}
+                    onChange={(event) =>
+                      setBreastFilletRequested(event.target.checked)
+                    }
+                    type="checkbox"
+                  />
+                  Pechuga fileteada (
+                  {formatMoney(
+                    selectedPreferredCustomer
+                      ?.breast_fillet_price_per_chicken ?? 0
+                  )}
+                  /pollo)
+                </label>
+              </div>
+            ) : null}
+
             <div className="grid gap-4 rounded-md border border-[#E8DFC6] bg-[#FAF7EF] p-4 sm:grid-cols-3">
               <div>
                 <p className="text-xs font-bold uppercase text-[#0B7A3B]">
-                  Precio por kg
-                </p>
-                <p className="mt-1 text-lg font-black">
-                  {formatMoney(basePricePerKg)}/kg
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase text-[#0B7A3B]">
-                  Descuento por kg
-                </p>
-                <p className="mt-1 text-lg font-black">
-                  -{formatMoney(discountPerKg)}/kg
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase text-[#0B7A3B]">
-                  Precio aplicado
+                  {isPreferredCustomer ? "Precio preferencial" : "Precio público"}
                 </p>
                 <p className="mt-1 text-lg font-black">
                   {formatMoney(calculation.appliedPricePerKg)}/kg
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-[#0B7A3B]">
+                  Preparación
+                </p>
+                <p className="mt-1 text-lg font-black">
+                  {calculation.preparationApplies
+                    ? `${formatMoney(preparationUnitPrice)}/pollo`
+                    : "No aplica"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-[#0B7A3B]">
+                  Servicios extra
+                </p>
+                <p className="mt-1 text-lg font-black">
+                  {formatMoney(calculation.extraServicesTotal)}
                 </p>
               </div>
             </div>
@@ -502,7 +586,6 @@ export function PlumaSaleForm() {
 
         <PlumaSaleSummary
           attendantName={currentUser?.name ?? ""}
-          basePricePerKg={basePricePerKg}
           calculation={calculation}
           chickenQuantity={
             Number.isInteger(chickenQuantity) && chickenQuantity > 0
@@ -510,8 +593,9 @@ export function PlumaSaleForm() {
               : 0
           }
           customerName={customerName}
-          discountPerKg={discountPerKg}
+          customerType={customerType}
           preparationUnitPrice={preparationUnitPrice}
+          publicPricePerKg={publicPricePerKg}
           totalWeightKg={Number.isFinite(parsedWeight) ? parsedWeight : 0}
         />
       </div>

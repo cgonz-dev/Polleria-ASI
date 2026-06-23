@@ -88,6 +88,14 @@ export function DailyClosureStatus({
             {formatMoney(closure.cash_difference)}
           </p>
         </div>
+        <div className="rounded-md bg-white/70 px-3 py-2">
+          <p className="text-xs font-black uppercase text-[#6B7280]">
+            Servicios extra
+          </p>
+          <p className="mt-1 font-black">
+            {formatMoney(closure.extra_services_total ?? 0)}
+          </p>
+        </div>
       </div>
       {wasUpdated ? (
         <p className="mt-3 text-sm font-semibold text-[#1F2933]">

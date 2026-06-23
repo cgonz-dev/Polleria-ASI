@@ -6,12 +6,15 @@ export type MexicoDayRange = {
 };
 
 export type DailySalesSummary = {
+  breastFilletTotal: number;
   chickenSubtotal: number;
+  extraServicesTotal: number;
   grandTotal: number;
   pendingPrintCount: number;
   preparationTotal: number;
   printedCount: number;
   salesCount: number;
+  skinningTotal: number;
   totalChickens: number;
   totalWeightKg: number;
 };
@@ -25,7 +28,7 @@ export type DailyUserBreakdownRow = {
   grandTotal: number;
 };
 
-export type CustomerTypeKey = "PUBLICO_GENERAL" | "CLIENTE_PREMIUM";
+export type CustomerTypeKey = "PUBLICO_GENERAL" | "CLIENTE_PREFERENCIAL";
 
 export type DailyCustomerTypeBreakdownRow = {
   customerType: CustomerTypeKey;

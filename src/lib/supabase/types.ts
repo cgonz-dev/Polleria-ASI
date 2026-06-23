@@ -1,10 +1,12 @@
 export const APP_USER_ROLES = ["ADMIN", "CAJERO"] as const;
 export const PLUMA_PAYMENT_METHODS = ["EFECTIVO"] as const;
 export const PLUMA_SALE_STATUSES = ["COMPLETADA", "CANCELADA"] as const;
+export const PLUMA_WEIGHT_TYPES = ["PLUMA", "PELADO"] as const;
 
 export type AppUserRole = (typeof APP_USER_ROLES)[number];
 export type PlumaPaymentMethod = (typeof PLUMA_PAYMENT_METHODS)[number];
 export type PlumaSaleStatus = (typeof PLUMA_SALE_STATUSES)[number];
+export type PlumaWeightType = (typeof PLUMA_WEIGHT_TYPES)[number];
 
 export type BusinessSettings = {
   id: string;
@@ -12,6 +14,9 @@ export type BusinessSettings = {
   phone: string;
   current_price_per_kg: number;
   preparation_price_per_chicken: number;
+  preferred_customer_default_price_per_kg: number | null;
+  default_skinning_price_per_chicken: number;
+  default_breast_fillet_price_per_chicken: number;
   created_at: string;
   updated_at: string;
 };
@@ -34,6 +39,9 @@ export type PremiumCustomer = {
   name: string;
   phone: string | null;
   discount_per_kg: number;
+  preferred_price_per_kg: number;
+  skinning_price_per_chicken: number;
+  breast_fillet_price_per_chicken: number;
   active: boolean;
   notes: string | null;
   created_at: string;
@@ -54,6 +62,15 @@ export type PlumaSale = {
   chicken_subtotal: number;
   preparation_unit_price: number;
   preparation_total: number;
+  weight_type: PlumaWeightType;
+  preparation_applies: boolean;
+  skinning_requested: boolean;
+  skinning_unit_price: number;
+  skinning_total: number;
+  breast_fillet_requested: boolean;
+  breast_fillet_unit_price: number;
+  breast_fillet_total: number;
+  extra_services_total: number;
   grand_total: number;
   payment_method: PlumaPaymentMethod;
   printed_at: string | null;
@@ -81,6 +98,9 @@ export type DailyCashClosure = {
   total_weight_kg: number;
   chicken_subtotal: number;
   preparation_total: number;
+  skinning_total: number;
+  breast_fillet_total: number;
+  extra_services_total: number;
   grand_total: number;
   pending_print_count: number;
   printed_count: number;
@@ -96,6 +116,9 @@ export type InsertBusinessSettings = {
   phone: string;
   current_price_per_kg: number;
   preparation_price_per_chicken?: number;
+  preferred_customer_default_price_per_kg?: number | null;
+  default_skinning_price_per_chicken?: number;
+  default_breast_fillet_price_per_chicken?: number;
   created_at?: string;
   updated_at?: string;
 };
@@ -118,6 +141,9 @@ export type InsertPremiumCustomer = {
   name: string;
   phone?: string | null;
   discount_per_kg?: number;
+  preferred_price_per_kg?: number;
+  skinning_price_per_chicken?: number;
+  breast_fillet_price_per_chicken?: number;
   active?: boolean;
   notes?: string | null;
   created_at?: string;
@@ -138,6 +164,15 @@ export type InsertPlumaSale = {
   chicken_subtotal: number;
   preparation_unit_price: number;
   preparation_total: number;
+  weight_type?: PlumaWeightType;
+  preparation_applies?: boolean;
+  skinning_requested?: boolean;
+  skinning_unit_price?: number;
+  skinning_total?: number;
+  breast_fillet_requested?: boolean;
+  breast_fillet_unit_price?: number;
+  breast_fillet_total?: number;
+  extra_services_total?: number;
   grand_total: number;
   payment_method?: PlumaPaymentMethod;
   printed_at?: string | null;
@@ -165,6 +200,9 @@ export type InsertDailyCashClosure = {
   total_weight_kg: number;
   chicken_subtotal: number;
   preparation_total: number;
+  skinning_total: number;
+  breast_fillet_total: number;
+  extra_services_total: number;
   grand_total: number;
   pending_print_count: number;
   printed_count: number;

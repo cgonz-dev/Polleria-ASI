@@ -13,12 +13,15 @@ import type {
 
 function emptySummary(): DailySalesSummary {
   return {
+    breastFilletTotal: 0,
     chickenSubtotal: 0,
+    extraServicesTotal: 0,
     grandTotal: 0,
     pendingPrintCount: 0,
     preparationTotal: 0,
     printedCount: 0,
     salesCount: 0,
+    skinningTotal: 0,
     totalChickens: 0,
     totalWeightKg: 0,
   };
@@ -50,6 +53,15 @@ export function buildDailySalesSummary(
     );
     summary.preparationTotal = roundMoney(
       summary.preparationTotal + sale.preparation_total
+    );
+    summary.skinningTotal = roundMoney(
+      summary.skinningTotal + (sale.skinning_total ?? 0)
+    );
+    summary.breastFilletTotal = roundMoney(
+      summary.breastFilletTotal + (sale.breast_fillet_total ?? 0)
+    );
+    summary.extraServicesTotal = roundMoney(
+      summary.extraServicesTotal + (sale.extra_services_total ?? 0)
     );
     summary.grandTotal = roundMoney(summary.grandTotal + sale.grand_total);
 
@@ -112,11 +124,11 @@ export function buildDailyCustomerTypeBreakdown(
       },
     ],
     [
-      "CLIENTE_PREMIUM",
+      "CLIENTE_PREFERENCIAL",
       {
-        customerType: "CLIENTE_PREMIUM",
+        customerType: "CLIENTE_PREFERENCIAL",
         grandTotal: 0,
-        label: "Clientes premium",
+        label: "Clientes preferenciales",
         salesCount: 0,
         totalChickens: 0,
         totalWeightKg: 0,
@@ -126,7 +138,7 @@ export function buildDailyCustomerTypeBreakdown(
 
   for (const sale of sales) {
     const key: CustomerTypeKey = sale.customer_id
-      ? "CLIENTE_PREMIUM"
+      ? "CLIENTE_PREFERENCIAL"
       : "PUBLICO_GENERAL";
     const row = initialRows.get(key)!;
 
@@ -169,6 +181,11 @@ export function hasClosureMismatch(
     Math.abs(closure.total_weight_kg - summary.totalWeightKg) > 0.001 ||
     Math.abs(closure.chicken_subtotal - summary.chickenSubtotal) > 0.01 ||
     Math.abs(closure.preparation_total - summary.preparationTotal) > 0.01 ||
+    Math.abs((closure.skinning_total ?? 0) - summary.skinningTotal) > 0.01 ||
+    Math.abs((closure.breast_fillet_total ?? 0) - summary.breastFilletTotal) >
+      0.01 ||
+    Math.abs((closure.extra_services_total ?? 0) - summary.extraServicesTotal) >
+      0.01 ||
     Math.abs(closure.grand_total - summary.grandTotal) > 0.01 ||
     closure.pending_print_count !== summary.pendingPrintCount ||
     closure.printed_count !== summary.printedCount

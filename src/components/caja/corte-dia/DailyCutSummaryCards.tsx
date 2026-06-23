@@ -41,7 +41,7 @@ function SummaryCard({
 
 export function DailyCutSummaryCards({ summary }: DailyCutSummaryCardsProps) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-7">
       <SummaryCard
         label="Total vendido"
         tone="danger"
@@ -53,6 +53,10 @@ export function DailyCutSummaryCards({ summary }: DailyCutSummaryCardsProps) {
       <SummaryCard
         label="Preparación"
         value={formatMoney(summary.preparationTotal)}
+      />
+      <SummaryCard
+        label="Servicios extra"
+        value={formatMoney(summary.extraServicesTotal)}
       />
       <SummaryCard
         label="Tickets pendientes"

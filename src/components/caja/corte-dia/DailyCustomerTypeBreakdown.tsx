@@ -10,7 +10,7 @@ export function DailyCustomerTypeBreakdown({
   return (
     <section className="rounded-lg border border-[#E8DFC6] bg-white p-4 shadow-sm">
       <h2 className="text-lg font-black text-[#1F2933]">
-        Público general vs premium
+        Público general vs preferenciales
       </h2>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {rows.map((row) => (

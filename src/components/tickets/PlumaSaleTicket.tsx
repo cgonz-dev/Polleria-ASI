@@ -39,6 +39,14 @@ export function PlumaSaleTicket({
     customerName.length > 0 &&
     customerName.toLowerCase() !== "público general";
   const chickenLabel = sale.chicken_quantity === 1 ? "pollo" : "pollos";
+  const isPreparedSale =
+    sale.weight_type === "PELADO" || sale.preparation_applies === false;
+  const preparationApplies = sale.preparation_applies !== false;
+  const skinningRequested =
+    sale.skinning_requested === true || (sale.skinning_total ?? 0) > 0;
+  const breastFilletRequested =
+    sale.breast_fillet_requested === true ||
+    (sale.breast_fillet_total ?? 0) > 0;
 
   return (
     <article className="ticket-print-area">
@@ -49,7 +57,9 @@ export function PlumaSaleTicket({
 
       <div className="ticket-separator" />
 
-      <p className="ticket-title">VENTA POLLO EN PLUMA</p>
+      <p className="ticket-title">
+        {isPreparedSale ? "VENTA POLLO PREPARADO" : "VENTA POLLO EN PLUMA"}
+      </p>
       <TicketRow label="Ticket:" value={sale.sale_number} />
       <TicketRow label="Fecha:" value={formatDateTimeMx(sale.created_at)} />
 
@@ -60,7 +70,10 @@ export function PlumaSaleTicket({
       <div className="ticket-separator" />
 
       <TicketRow label="Pollos:" value={String(sale.chicken_quantity)} />
-      <TicketRow label="Peso total:" value={formatKg(sale.total_weight_kg)} />
+      <TicketRow
+        label={isPreparedSale ? "Peso ya pelado:" : "Peso en pluma:"}
+        value={formatKg(sale.total_weight_kg)}
+      />
 
       <div className="ticket-separator" />
 
@@ -72,17 +85,49 @@ export function PlumaSaleTicket({
       <div className="ticket-separator" />
 
       <TicketRow
-        label="Pollo en pluma:"
+        label={isPreparedSale ? "Pollo preparado:" : "Pollo en pluma:"}
         value={formatMoney(sale.chicken_subtotal)}
       />
 
-      <p className="ticket-section-label">Preparación:</p>
-      <TicketRow
-        label={`${sale.chicken_quantity} ${chickenLabel} x ${formatMoney(
-          sale.preparation_unit_price
-        )}`}
-        value={formatMoney(sale.preparation_total)}
-      />
+      {preparationApplies ? (
+        <>
+          <p className="ticket-section-label">Preparación:</p>
+          <TicketRow
+            label={`${sale.chicken_quantity} ${chickenLabel} x ${formatMoney(
+              sale.preparation_unit_price
+            )}`}
+            value={formatMoney(sale.preparation_total)}
+          />
+        </>
+      ) : null}
+
+      {skinningRequested || breastFilletRequested ? (
+        <>
+          <p className="ticket-section-label">Servicios extra:</p>
+          {skinningRequested ? (
+            <>
+              <p className="ticket-section-label">Despielada:</p>
+              <TicketRow
+                label={`${sale.chicken_quantity} ${chickenLabel} x ${formatMoney(
+                  sale.skinning_unit_price ?? 0
+                )}`}
+                value={formatMoney(sale.skinning_total ?? 0)}
+              />
+            </>
+          ) : null}
+          {breastFilletRequested ? (
+            <>
+              <p className="ticket-section-label">Pechuga fileteada:</p>
+              <TicketRow
+                label={`${sale.chicken_quantity} ${chickenLabel} x ${formatMoney(
+                  sale.breast_fillet_unit_price ?? 0
+                )}`}
+                value={formatMoney(sale.breast_fillet_total ?? 0)}
+              />
+            </>
+          ) : null}
+        </>
+      ) : null}
 
       <div className="ticket-separator" />
 

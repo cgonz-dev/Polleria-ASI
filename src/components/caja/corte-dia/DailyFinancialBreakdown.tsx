@@ -32,10 +32,26 @@ export function DailyFinancialBreakdown({
           value={formatMoney(summary.preparationTotal)}
         />
         <BreakdownRow
-          label="Total efectivo esperado"
+          label="Despielada"
+          value={formatMoney(summary.skinningTotal)}
+        />
+        <BreakdownRow
+          label="Pechuga fileteada"
+          value={formatMoney(summary.breastFilletTotal)}
+        />
+        <BreakdownRow
+          label="Servicios extra"
+          value={formatMoney(summary.extraServicesTotal)}
+        />
+        <BreakdownRow
+          label="Total vendido"
           value={formatMoney(summary.grandTotal)}
         />
       </div>
+      <p className="mt-3 text-xs text-[#6B7280]">
+        La preparación aplica solo a público general; clientes preferenciales
+        pueden tener servicios extra.
+      </p>
     </section>
   );
 }

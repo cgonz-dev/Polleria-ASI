@@ -21,7 +21,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
   return data;
 }
 
-export async function getActivePremiumCustomers(): Promise<PremiumCustomer[]> {
+export async function getActivePreferredCustomers(): Promise<PremiumCustomer[]> {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase
     .from("premium_customers")
@@ -30,7 +30,7 @@ export async function getActivePremiumCustomers(): Promise<PremiumCustomer[]> {
     .order("name", { ascending: true });
 
   if (error) {
-    throw new Error("No se pudieron cargar los clientes premium activos.");
+    throw new Error("No se pudieron cargar los clientes preferenciales activos.");
   }
 
   return data ?? [];
@@ -51,12 +51,21 @@ export async function createPlumaSale(
       customer_id: input.customerId,
       customer_name_snapshot: input.customerNameSnapshot,
       discount_per_kg: input.discountPerKg,
+      breast_fillet_requested: input.breastFilletRequested,
+      breast_fillet_total: input.breastFilletTotal,
+      breast_fillet_unit_price: input.breastFilletUnitPrice,
+      extra_services_total: input.extraServicesTotal,
       grand_total: input.grandTotal,
       payment_method: "EFECTIVO",
+      preparation_applies: input.preparationApplies,
       preparation_total: input.preparationTotal,
       preparation_unit_price: input.preparationUnitPrice,
+      skinning_requested: input.skinningRequested,
+      skinning_total: input.skinningTotal,
+      skinning_unit_price: input.skinningUnitPrice,
       status: "COMPLETADA",
       total_weight_kg: input.totalWeightKg,
+      weight_type: input.weightType,
     })
     .select("*")
     .single();

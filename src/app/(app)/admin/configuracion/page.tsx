@@ -1,14 +1,10 @@
-import { ModulePlaceholder } from "@/components/app/module-placeholder";
+import { SystemSettingsPage } from "@/components/admin/configuracion/SystemSettingsPage";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function ConfiguracionPage() {
   return (
     <ProtectedRoute requireAdmin>
-      <ModulePlaceholder
-        description="Base para parámetros del negocio, ticket, caja y futuras integraciones."
-        module="Administración"
-        title="Configuración"
-      />
+      <SystemSettingsPage />
     </ProtectedRoute>
   );
 }

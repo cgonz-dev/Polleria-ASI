@@ -26,7 +26,8 @@ Abre [http://localhost:3000](http://localhost:3000). La ruta raíz redirige a `/
 
 - `/dashboard`
 - `/ventas/pluma`
-- `/clientes/premium`
+- `/clientes/preferenciales`
+- `/clientes/premium` redirige a `/clientes/preferenciales`
 - `/caja/tickets-pendientes`
 - `/caja/corte-dia`
 - `/admin/usuarios`
@@ -63,17 +64,23 @@ Incluye:
 
 - `business_settings`
 - `app_users`
-- `premium_customers`
+- `premium_customers` (tabla técnica para Clientes Preferenciales)
 - `pluma_sales`
 - `pluma_sale_cancellations`
 
-La fórmula base para Venta en Pluma queda documentada en `docs/contracts/data-contract.md`:
+Las fórmulas base de venta quedan documentadas en `docs/contracts/data-contract.md`.
 
 ```txt
-Precio aplicado = precio general - descuento por kg
-Subtotal pollo = peso total kg * precio aplicado
-Preparación = cantidad de pollos * precio de preparación unitario
+Público general:
+Subtotal pollo = peso en pluma kg * precio público kg
+Preparación = cantidad de pollos * preparación pública por pollo
 Total = subtotal pollo + preparación
+
+Cliente preferencial:
+Subtotal pollo = peso ya pelado kg * precio preferencial kg
+Preparación = 0
+Servicios extra = despielada + pechuga fileteada
+Total = subtotal pollo + servicios extra
 ```
 
 Para usarlo, crea un proyecto en Supabase, abre el SQL Editor y ejecuta el contenido de `docs/database/001-initial-schema.sql`.
@@ -126,6 +133,14 @@ docs/database/007-daily-cash-closures.sql
 
 Esta migración crea `daily_cash_closures` y el RPC seguro `close_daily_cash_closure`.
 
+Para activar Clientes Preferenciales, precio especial y servicios extra, ejecuta:
+
+```txt
+docs/database/008-preferred-customers-extra-services.sql
+```
+
+Esta migración agrega defaults de configuración, precio preferencial por cliente, servicios de despielada/pechuga fileteada, snapshots en ventas y totales extra en el corte del día.
+
 ## Login y permisos
 
 El sistema usa `/login` con email y contraseña de Supabase Auth.
@@ -177,7 +192,8 @@ Incluye:
 - Total efectivo esperado.
 - Tickets impresos y pendientes.
 - Desglose por usuario.
-- Desglose público general vs clientes premium.
+- Desglose público general vs clientes preferenciales.
+- Despielada, pechuga fileteada y servicios extra.
 - Hora de última actualización.
 - Estado de cierre con usuario, fecha, efectivo contado y diferencia.
 - Impresión simple del corte del día para usuarios `ADMIN`.
@@ -213,9 +229,23 @@ La ruta `/ventas/pluma` carga desde Supabase:
 
 - Configuración del negocio.
 - Perfil del usuario autenticado.
-- Clientes premium activos.
+- Clientes preferenciales activos.
 
-Permite registrar ventas de público general o cliente premium, calcula el total en tiempo real y guarda snapshots de cliente, precio, descuento y usuario que atiende. Por ahora el método de pago queda fijo como `EFECTIVO` y el estado como `COMPLETADA`.
+Permite registrar ventas de público general o cliente preferencial, calcula el total en tiempo real y guarda snapshots de cliente, precios, peso, preparación, servicios extra y usuario que atiende. Por ahora el método de pago queda fijo como `EFECTIVO` y el estado como `COMPLETADA`.
+
+Para público general:
+
+- Se pesa el pollo en pluma.
+- Se cobra precio público por kg.
+- Se cobra preparación por pollo.
+- No se muestran servicios extra.
+
+Para cliente preferencial:
+
+- Se pesa el pollo ya pelado.
+- Se cobra el precio preferencial por kg configurado en el cliente.
+- No se cobra preparación.
+- Se puede cobrar despielada y pechuga fileteada por pollo.
 
 Después de registrar una venta se abre un ticket de 80mm con acciones:
 
@@ -224,7 +254,7 @@ Después de registrar una venta se abre un ticket de 80mm con acciones:
 - `Nueva venta`: cierra el ticket y limpia la captura.
 - Usuarios sin permiso ven: `Ticket registrado. Imprime desde la PC de caja.`
 
-El ticket está simplificado para cliente final. Siempre inicia con `POLLERÍA ASI` y `Tel: 456-106-0141`; muestra `Precio por kg` usando el precio final aplicado, `Pollo en pluma`, preparación explicada como `cantidad pollos x precio unitario`, y total. No muestra cajero, tipo de cliente, descuento, precio base, etiqueta técnica de precio aplicado ni forma de pago.
+El ticket está simplificado para cliente final. Siempre inicia con `POLLERÍA ASI` y `Tel: 456-106-0141`; para público general muestra peso en pluma, pollo en pluma y preparación; para cliente preferencial muestra peso ya pelado, pollo preparado y servicios extra solo si aplican. No muestra cajero, tipo de cliente, descuento, precio base, etiqueta técnica de precio aplicado ni forma de pago.
 
 ## Logo y branding
 
