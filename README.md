@@ -178,6 +178,9 @@ Incluye:
 - Tickets impresos y pendientes.
 - Desglose por usuario.
 - Desglose público general vs clientes premium.
+- Hora de última actualización.
+- Estado de cierre con usuario, fecha, efectivo contado y diferencia.
+- Impresión simple del corte del día para usuarios `ADMIN`.
 
 El corte usa horario de México:
 
@@ -201,6 +204,8 @@ Notas opcionales
 ```
 
 La base calcula los totales reales desde `pluma_sales`; el frontend no envía totales calculados. Si entran ventas después de cerrar, la pantalla avisa que puede haber cambios posteriores al cierre.
+
+La impresión del corte usa una zona separada `.corte-dia-print-area` y se activa con la clase `printing-daily-cut`, para no competir con la impresión del ticket de 80mm (`printing-ticket`). En móvil, el desglose por usuario se muestra como tarjetas en lugar de tabla horizontal.
 
 ## Venta rápida en Pluma
 

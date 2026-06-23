@@ -39,6 +39,16 @@ export function PlumaSaleTicketModal({
       ? "Imprime el ticket y después márcalo como impreso."
       : "Ticket registrado. Imprime desde la PC de caja.";
 
+  function handlePrintTicket() {
+    document.documentElement.classList.add("printing-ticket");
+    document.body.classList.add("printing-ticket");
+    window.print();
+    window.setTimeout(() => {
+      document.documentElement.classList.remove("printing-ticket");
+      document.body.classList.remove("printing-ticket");
+    }, 500);
+  }
+
   return (
     <div className="ticket-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-3">
       <div className="ticket-modal-panel max-h-[94vh] w-full max-w-xl overflow-y-auto rounded-lg border border-[#E8DFC6] bg-[#FAF7EF] p-4 shadow-xl">
@@ -56,7 +66,7 @@ export function PlumaSaleTicketModal({
             {canPrintTickets ? (
               <Button
                 className="h-11 bg-[#D92D20] px-4 font-bold text-white hover:bg-[#B42318]"
-                onClick={() => window.print()}
+                onClick={handlePrintTicket}
                 type="button"
               >
                 {isPrinted ? "Reimprimir" : "Imprimir ticket"}

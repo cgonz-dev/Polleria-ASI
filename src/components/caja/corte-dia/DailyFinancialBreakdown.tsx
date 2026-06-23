@@ -3,9 +3,9 @@ import type { DailySalesSummary } from "@/lib/modules/corte-dia/types";
 
 function BreakdownRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-[#E8DFC6] py-3 last:border-b-0">
+    <div className="flex flex-col gap-1 border-b border-[#E8DFC6] py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <span className="text-sm text-[#6B7280]">{label}</span>
-      <span className="text-right text-sm font-black text-[#1F2933]">
+      <span className="text-base font-black text-[#1F2933] sm:text-right sm:text-sm">
         {value}
       </span>
     </div>

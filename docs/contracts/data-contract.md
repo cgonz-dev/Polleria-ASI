@@ -21,6 +21,8 @@ Este contrato describe el modelo inicial de datos para Supabase PostgreSQL, aute
 - El corte del día guarda snapshots en `daily_cash_closures`.
 - Solo ventas `COMPLETADA` cuentan para el corte.
 - El corte usa el día local de México en zona `America/Mexico_City`.
+- La pantalla de corte muestra hora de última actualización y compara el snapshot cerrado contra el resumen vivo.
+- La impresión del corte es exclusiva de usuarios `ADMIN` y usa una zona imprimible separada del ticket de 80mm.
 - El ticket imprimible usa datos persistidos de `pluma_sales`, no datos temporales del formulario.
 - El teléfono impreso sale de `business_settings.phone`.
 - La impresión actual usa el diálogo del navegador; QZ Tray queda como mejora futura.
@@ -319,6 +321,9 @@ Reglas:
 - Cerrar corte no modifica ventas.
 - Cerrar corte no marca tickets como impresos.
 - Si entran ventas después del cierre, el resumen vivo cambia y el cierre queda como snapshot hasta que un `ADMIN` lo actualice.
+- Si `updated_at` es distinto de `created_at`, la UI muestra la última actualización del cierre.
+- Si el resumen vivo ya no coincide con el snapshot cerrado, la UI muestra un aviso para revisar si se necesita actualizar el corte.
+- La impresión del corte no actualiza datos ni marca tickets; solo genera el resumen imprimible del navegador.
 
 RPC para cerrar corte:
 

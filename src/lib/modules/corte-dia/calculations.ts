@@ -151,7 +151,7 @@ export function enrichClosure(
 
   return {
     ...closure,
-    closedByName: closedBy?.name ?? getFallbackUserName(closure.closed_by_user_id),
+    closedByName: closedBy?.name ?? null,
   };
 }
 

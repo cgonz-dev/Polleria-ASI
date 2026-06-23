@@ -6,12 +6,14 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { CloseDailyCutModal } from "@/components/caja/corte-dia/CloseDailyCutModal";
 import { DailyClosureStatus } from "@/components/caja/corte-dia/DailyClosureStatus";
 import { DailyCustomerTypeBreakdown } from "@/components/caja/corte-dia/DailyCustomerTypeBreakdown";
+import { DailyCutPrintView } from "@/components/caja/corte-dia/DailyCutPrintView";
 import { DailyCutSummaryCards } from "@/components/caja/corte-dia/DailyCutSummaryCards";
 import { DailyFinancialBreakdown } from "@/components/caja/corte-dia/DailyFinancialBreakdown";
 import { DailyPrintSummary } from "@/components/caja/corte-dia/DailyPrintSummary";
 import { DailyUserBreakdown } from "@/components/caja/corte-dia/DailyUserBreakdown";
 import { Button } from "@/components/ui/button";
 import { isAdmin } from "@/lib/auth/permissions";
+import { formatDateTimeMx } from "@/lib/formatters/date";
 import {
   closeDailyCashClosure,
   getDailySalesSummary,
@@ -36,7 +38,9 @@ export function DailyCutPage() {
   const [isCloseModalOpen, setIsCloseModalOpen] = React.useState(false);
   const [isSavingClosure, setIsSavingClosure] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [lastUpdatedAt, setLastUpdatedAt] = React.useState<Date | null>(null);
   const [message, setMessage] = React.useState("");
+  const lastRealtimeMessageAtRef = React.useRef(0);
 
   const loadData = React.useCallback(
     async (showLoader: boolean, showUpdatedMessage = false) => {
@@ -49,10 +53,15 @@ export function DailyCutPage() {
       try {
         const nextData = await getDailySalesSummary(selectedDate);
         setData(nextData);
+        setLastUpdatedAt(new Date());
         setError("");
 
         if (showUpdatedMessage) {
-          setMessage("Corte actualizado.");
+          const now = Date.now();
+          if (now - lastRealtimeMessageAtRef.current > 5000) {
+            setMessage("Corte actualizado.");
+            lastRealtimeMessageAtRef.current = now;
+          }
         }
       } catch (loadError) {
         setError(getErrorMessage(loadError));
@@ -105,6 +114,16 @@ export function DailyCutPage() {
 
   const summary = data?.summary;
 
+  function handlePrintCut() {
+    document.documentElement.classList.add("printing-daily-cut");
+    document.body.classList.add("printing-daily-cut");
+    window.print();
+    window.setTimeout(() => {
+      document.documentElement.classList.remove("printing-daily-cut");
+      document.body.classList.remove("printing-daily-cut");
+    }, 500);
+  }
+
   return (
     <section className="brand-workspace rounded-lg p-3 text-[#1F2933] sm:p-5">
       <CloseDailyCutModal
@@ -116,7 +135,11 @@ export function DailyCutPage() {
         onSave={(input) => void handleSaveClosure(input)}
       />
 
-      <div className="mb-5 rounded-lg border border-[#E8DFC6] bg-white p-4 shadow-sm sm:p-5">
+      {data ? (
+        <DailyCutPrintView data={data} lastUpdatedAt={lastUpdatedAt} />
+      ) : null}
+
+      <div className="no-print mb-5 rounded-lg border border-[#E8DFC6] bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-wide text-[#0B7A3B]">
@@ -128,22 +151,26 @@ export function DailyCutPage() {
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B7280]">
               Resumen de ventas, efectivo esperado y actividad del día.
             </p>
+            <p className="mt-1 text-xs font-semibold text-[#6B7280]">
+              Última actualización:{" "}
+              {lastUpdatedAt ? formatDateTimeMx(lastUpdatedAt) : "Sin cargar"}
+            </p>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,12rem)_auto_auto] sm:items-end">
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,12rem)_auto_auto_auto] sm:items-end">
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-[#1F2933]">
                 Fecha
               </span>
               <input
-                className="h-11 rounded-md border border-[#E8DFC6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#0B7A3B] focus:ring-4 focus:ring-[#0B7A3B]/15"
+                className="h-11 w-full rounded-md border border-[#E8DFC6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#0B7A3B] focus:ring-4 focus:ring-[#0B7A3B]/15"
                 onChange={(event) => setSelectedDate(event.target.value)}
                 type="date"
                 value={selectedDate}
               />
             </label>
             <Button
-              className="h-11 border-[#0B7A3B] bg-white px-4 font-bold text-[#0B7A3B] hover:bg-[#EAF7EE]"
+              className="h-11 w-full border-[#0B7A3B] bg-white px-4 font-bold text-[#0B7A3B] hover:bg-[#EAF7EE]"
               disabled={isRefreshing}
               onClick={() => void loadData(false)}
               type="button"
@@ -153,11 +180,22 @@ export function DailyCutPage() {
             </Button>
             {canCloseCut ? (
               <Button
-                className="h-11 bg-[#D92D20] px-4 font-bold text-white hover:bg-[#B42318]"
+                className="h-11 w-full bg-[#D92D20] px-4 font-bold text-white hover:bg-[#B42318]"
                 onClick={() => setIsCloseModalOpen(true)}
                 type="button"
               >
                 {data?.closure ? "Actualizar corte" : "Cerrar corte"}
+              </Button>
+            ) : null}
+            {canCloseCut ? (
+              <Button
+                className="h-11 w-full border-[#0B7A3B] bg-white px-4 font-bold text-[#0B7A3B] hover:bg-[#EAF7EE]"
+                disabled={!data}
+                onClick={handlePrintCut}
+                type="button"
+                variant="outline"
+              >
+                Imprimir corte
               </Button>
             ) : null}
           </div>

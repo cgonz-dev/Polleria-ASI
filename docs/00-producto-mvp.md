@@ -20,6 +20,8 @@ El MVP de Venta en Pluma ahora incluye captura rápida, cálculo automático, gu
 
 El ticket imprimible está pensado para el cliente final: muestra información clara de compra y evita datos internos como cajero, descuentos, tipo de cliente o desglose técnico de precios.
 
+El corte del día está pensado para revisión operativa interna: muestra totales, tickets, usuario que cerró, efectivo contado, diferencia e impresión simple del resumen para administración.
+
 El acceso inicial usa login con Supabase Auth. Cada usuario autenticado debe tener un perfil activo en `app_users`, con rol `ADMIN` o `CAJERO` y permiso específico para imprimir tickets.
 
 ## Problema que resuelve
@@ -39,7 +41,7 @@ El sistema busca ordenar capturas de venta, tickets, clientes frecuentes y corte
 - Login para separar operación por usuario y evitar selección manual de cajero.
 - Permiso de impresión para permitir captura desde celulares o tablets sin imprimir desde todos los dispositivos.
 - Bandeja de tickets pendientes para centralizar la impresión en la PC de caja.
-- Corte del día para revisar total vendido, efectivo esperado, pollos, kg, preparación y actividad por usuario.
+- Corte del día para revisar total vendido, efectivo esperado, pollos, kg, preparación, actividad por usuario, estado de cierre e impresión administrativa.
 - Enfoque económico, priorizando herramientas accesibles y una implementación mantenible.
 - Enfoque responsive para computadora, tablet y celular.
 
@@ -67,6 +69,8 @@ printed_by_user_id
 ```
 
 El corte del día usa `daily_cash_closures` para guardar una fotografía de los totales del día. Solo considera ventas `COMPLETADA`, usa horario `America/Mexico_City` y permite comparar efectivo esperado contra efectivo contado.
+
+La pantalla de corte muestra hora de última actualización, avisa si el resumen vivo ya no coincide con el cierre guardado y usa una vista responsive con tarjetas en móvil para evitar tablas difíciles de leer.
 
 Fórmula inicial:
 

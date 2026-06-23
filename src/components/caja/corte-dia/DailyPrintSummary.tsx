@@ -13,7 +13,7 @@ export function DailyPrintSummary({ summary }: { summary: DailySalesSummary }) {
           </p>
         </div>
         <Link
-          className="inline-flex h-10 items-center justify-center rounded-md border border-[#0B7A3B] bg-white px-4 text-sm font-bold text-[#0B7A3B] hover:bg-[#EAF7EE]"
+          className="inline-flex h-11 w-full items-center justify-center rounded-md border border-[#0B7A3B] bg-white px-4 text-sm font-bold text-[#0B7A3B] hover:bg-[#EAF7EE] sm:h-10 sm:w-auto"
           href="/caja/tickets-pendientes"
         >
           Ver tickets pendientes
