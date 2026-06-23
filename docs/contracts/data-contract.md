@@ -18,6 +18,9 @@ Este contrato describe el modelo inicial de datos para Supabase PostgreSQL, aute
 - La impresión se rastrea en `pluma_sales` con `printed_at` y `printed_by_user_id`.
 - `printed_at is null` significa ticket pendiente de imprimir.
 - `printed_at is not null` significa ticket marcado como impreso.
+- El corte del día guarda snapshots en `daily_cash_closures`.
+- Solo ventas `COMPLETADA` cuentan para el corte.
+- El corte usa el día local de México en zona `America/Mexico_City`.
 - El ticket imprimible usa datos persistidos de `pluma_sales`, no datos temporales del formulario.
 - El teléfono impreso sale de `business_settings.phone`.
 - La impresión actual usa el diálogo del navegador; QZ Tray queda como mejora futura.
@@ -283,6 +286,66 @@ public.can_print_tickets()
 Si el ticket ya está impreso, no sobrescribe `printed_at` ni `printed_by_user_id`.
 
 Supabase Realtime está habilitado para `public.pluma_sales`. La bandeja escucha cambios de `INSERT` y `UPDATE` para refrescar pendientes, últimos impresos y contador.
+
+## daily_cash_closures
+
+Registro histórico de cierres diarios de caja.
+
+| Campo | Tipo | Regla |
+| --- | --- | --- |
+| `id` | `uuid` | Primary key, default `gen_random_uuid()` |
+| `business_date` | `date` | Fecha local de negocio, única |
+| `expected_cash_total` | `numeric(10,2)` | Total esperado según ventas completadas |
+| `counted_cash_total` | `numeric(10,2)` | Efectivo contado físicamente |
+| `cash_difference` | `numeric(10,2)` | `counted_cash_total - expected_cash_total` |
+| `sales_count` | `integer` | Ventas completadas consideradas |
+| `total_chickens` | `integer` | Pollos vendidos |
+| `total_weight_kg` | `numeric(10,3)` | Kilos vendidos |
+| `chicken_subtotal` | `numeric(10,2)` | Subtotal de pollo |
+| `preparation_total` | `numeric(10,2)` | Total de preparación |
+| `grand_total` | `numeric(10,2)` | Total vendido |
+| `pending_print_count` | `integer` | Tickets completados sin imprimir |
+| `printed_count` | `integer` | Tickets marcados como impresos |
+| `closed_by_user_id` | `uuid` | Referencia `app_users(id)` |
+| `notes` | `text` | Opcional |
+| `created_at` | `timestamptz` | Default `now()` |
+| `updated_at` | `timestamptz` | Default `now()`, se actualiza por trigger |
+
+Reglas:
+
+- Solo puede existir un cierre por `business_date`.
+- Usuarios autenticados pueden leer cierres.
+- Solo `ADMIN` puede cerrar o actualizar corte.
+- Cerrar corte no modifica ventas.
+- Cerrar corte no marca tickets como impresos.
+- Si entran ventas después del cierre, el resumen vivo cambia y el cierre queda como snapshot hasta que un `ADMIN` lo actualice.
+
+RPC para cerrar corte:
+
+```txt
+public.close_daily_cash_closure(p_business_date date, p_counted_cash_total numeric, p_notes text)
+```
+
+El frontend solo envía fecha, efectivo contado y notas. La base calcula:
+
+```txt
+expected_cash_total
+sales_count
+total_chickens
+total_weight_kg
+chicken_subtotal
+preparation_total
+grand_total
+pending_print_count
+printed_count
+cash_difference
+```
+
+El rango de fecha se calcula en horario:
+
+```txt
+America/Mexico_City
+```
 
 ## pluma_sale_cancellations
 

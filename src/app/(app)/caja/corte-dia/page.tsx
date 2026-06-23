@@ -1,11 +1,5 @@
-import { ModulePlaceholder } from "@/components/app/module-placeholder";
+import { DailyCutPage } from "@/components/caja/corte-dia/DailyCutPage";
 
 export default function CorteDelDiaPage() {
-  return (
-    <ModulePlaceholder
-      description="Espacio reservado para cierres diarios, totales de caja y revisión operativa."
-      module="Caja"
-      title="Corte del Día"
-    />
-  );
+  return <DailyCutPage />;
 }
