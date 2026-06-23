@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>Pollería ASI</title>
+  <rect width="512" height="512" fill="#171717" />
+  <circle cx="256" cy="256" r="176" fill="#ffffff" />
+  <text x="256" y="292" dominant-baseline="middle" text-anchor="middle" fill="#171717" font-family="Arial, Helvetica, sans-serif" font-size="116" font-weight="700">ASI</text>
+</svg>
