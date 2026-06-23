@@ -185,3 +185,44 @@ Y las marca como impresas después de imprimir el ticket usando el RPC:
 ```txt
 public.mark_pluma_sale_printed(p_sale_id uuid)
 ```
+
+## Corte del Día
+
+Se implementó la ruta:
+
+```txt
+/caja/corte-dia
+```
+
+La pantalla muestra:
+
+- Total vendido.
+- Ventas del día.
+- Pollos vendidos.
+- Kg vendidos.
+- Preparación.
+- Subtotal pollo.
+- Tickets impresos y pendientes.
+- Desglose por usuario.
+- Desglose público general vs clientes premium.
+- Estado de cierre.
+
+Se agregó la migración:
+
+```txt
+docs/database/007-daily-cash-closures.sql
+```
+
+Esa migración crea:
+
+```txt
+public.daily_cash_closures
+```
+
+Y el RPC:
+
+```txt
+public.close_daily_cash_closure(p_business_date, p_counted_cash_total, p_notes)
+```
+
+Solo usuarios `ADMIN` pueden cerrar o actualizar corte. El cierre guarda un snapshot de los totales del día, pero no modifica ventas ni marca tickets como impresos.
